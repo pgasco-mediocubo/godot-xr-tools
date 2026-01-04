@@ -1,3 +1,4 @@
+@tool
 class_name XRFirearmBolt
 extends MeshInstance3D
 
@@ -13,8 +14,8 @@ var _current_controller : XRController3D
 
 
 # Add support for is_xr_class on XRTools classes
-func is_xr_class(name : String) -> bool:
-	return name == "XRFirearmBolt"
+func is_xr_class(xr_name:  String) -> bool:
+	return xr_name == "XRFirearmBolt"
 
 
 func _ready() -> void:

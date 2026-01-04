@@ -10,6 +10,7 @@ This repository contains a number of support files and support scenes that can b
 ## Versions
 
 Official releases are tagged and can be found [here](https://github.com/GodotVR/godot-xr-tools/releases).
+You can try out the demo [on itch.io](https://godot-xr.itch.io/godot-xr-tools-demo)!
 
 The following branches are in active development:
 
@@ -23,6 +24,7 @@ Version compatibility:
 
 | Godot XR Tools | Minimum Godot version |
 |----------------|-----------------------|
+| 4.5.x          | 4.4                   |
 | 4.4.x          | 4.2                   |
 | 4.3.x          | 4.1                   |
 | 4.2.x          | 4.1                   |

@@ -8,16 +8,19 @@ name: Publish Demo
 
 # Trigger rules (adjust to configure when CI is performed)
 on:
-  [push, pull_request]
+  release:
+    # We'll run this workflow when a new GitHub release is created
+    types: [published]
+  workflow_dispatch: {}
 
 
 # Environment variables
 env:
   # Configure Godot version
-  GODOT_VERSION: 4.3.0
+  GODOT_VERSION: 4.4.1
 
   # OpenXR Vendors version
-  OPENXR_VENDORS_VERSION: 3.1.1-stable
+  OPENXR_VENDORS_VERSION: 4.2.2-stable
   
   # Butler API Key (comment to disable)
   BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
@@ -47,6 +50,7 @@ jobs:
             export-folder: build/windows
             archive: Windows
             butler-channel: windows
+            vendor-plugin: false
 
           # Export for Linux
           - name: 🐧 Linux
@@ -57,6 +61,7 @@ jobs:
             export-folder: build/linux
             archive: Linux
             butler-channel: linux
+            vendor-plugin: false
 
           # Export for Android Quest
           - name: 🤖 Android Quest
@@ -68,6 +73,7 @@ jobs:
             export-folder: build/android-quest
             archive: Android-Quest
             butler-channel: android-quest
+            vendor-plugin: true
 
           # Export for Android Pico
           - name: 🤖 Android Pico
@@ -79,6 +85,7 @@ jobs:
             export-folder: build/android-pico
             archive: Android-Pico
             butler-channel: android-pico
+            vendor-plugin: true
 
           # Export for Android Lynx
           - name: 🤖 Android Lynx
@@ -90,6 +97,7 @@ jobs:
             export-folder: build/android-lynx
             archive: Android-Lynx
             butler-channel: android-lynx
+            vendor-plugin: true
 
           # Export for Android Khronos
           - name: 🤖 Android Khronos
@@ -101,6 +109,7 @@ jobs:
             export-folder: build/android-khronos
             archive: Android-Khronos
             butler-channel: android-khronos
+            vendor-plugin: true
 
           # Export for WebXR
           - name: 🌐 WebXR
@@ -111,6 +120,7 @@ jobs:
             export-folder: build/webxr
             archive: WebXR
             butler-channel: webxr
+            vendor-plugin: true
 
     steps:
       # Check out the repository
@@ -120,6 +130,7 @@ jobs:
       # Install the OpenXR Vendors Plugin
       - name: Install OpenXR Vendors Plugin
         shell: bash
+        if: matrix.vendor-plugin
         run: |
           curl -L -O https://github.com/GodotVR/godot_openxr_vendors/releases/download/${{ env.OPENXR_VENDORS_VERSION }}/godotopenxrvendorsaddon.zip
           unzip -o godotopenxrvendorsaddon.zip -d godotopenxrvendorsaddon
@@ -184,20 +195,14 @@ jobs:
 
       # Install butler (if building release with butler support)
       - name: Install Butler
-        if: >
-          github.event_name == 'push' && 
-          github.ref_type == 'tag' &&
-          env.BUTLER_API_KEY != ''
+        if: env.BUTLER_API_KEY != ''
         uses: remarkablegames/setup-butler@v1
         with:
           butler-version: LATEST
 
       # Push to itch.io (if building release)
       - name: Push to itch.io
-        if: >
-          github.event_name == 'push' && 
-          github.ref_type == 'tag' &&
-          env.BUTLER_API_KEY != ''
+        if: env.BUTLER_API_KEY != ''
         run: >
           butler push
           --ignore '.gitignore'
@@ -207,9 +212,6 @@ jobs:
 
       # Compress project (if building release)
       - name: Compress Project
-        if: >
-          github.event_name == 'push' && 
-          github.ref_type == 'tag'
         run: |
           cd ${{ matrix.export-folder }}
           7z a -tzip ${{ matrix.archive }}.zip *.* -x'!.gitignore'
@@ -217,12 +219,12 @@ jobs:
       # Publish release (if building release)
       - name: Publish Release
         uses: ncipollo/release-action@v1
-        if: >
-          github.event_name == 'push' && 
-          github.ref_type == 'tag'
         with:
+          draft: true
           allowUpdates: true
           artifacts: '${{ matrix.export-folder }}/${{ matrix.archive }}.zip'
           omitNameDuringUpdate: true
           omitBodyDuringUpdate: true
+          omitDraftDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
           token: ${{ secrets.GITHUB_TOKEN }}
